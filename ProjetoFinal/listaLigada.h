@@ -14,6 +14,8 @@ Lista *criaLista();
 
 void abortaPrograma();
 
+void limpar_buffer();
+
 int tamanhoLista(Lista *li);
 
 int listaCheia(Lista *li);
@@ -24,10 +26,18 @@ int insereOrdenado (Lista *li, CLIENTE cli);
 
 int removeOrdenado(Lista *li, int cod);
 
-int consultaPosicao(Lista *li, CLIENTE *cli);
+void mostraTodosClientes(Lista *li);
 
 int consultaCodigo(Lista *li, int cod, CLIENTE *cli);
+
+void buscaClientePorNome(Lista *li, const char *nomeBusca);
+
+int editarClientePorCodigo(Lista *li, int codigo);
 
 struct cliente coleta_dados_cliente();
 
 void apagaLista (Lista *li);
+
+void carregarClientesDoArquivo(Lista *li);
+
+void salvarClientesNoArquivo(Lista *li);

@@ -1,18 +1,21 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "listaLigada.h"
 
 int main()
 {
     int x, opcao = 1;
-    int codigo, posicao = 2;
+    int codigo;
     CLIENTE cliente_consulta;
 
-    Lista *li = NULL;
+    Lista *li = criaLista();
 
     if ((li = criaLista()) == NULL) {
         abortaPrograma();
     }
+
+    carregarClientesDoArquivo(li); 
 
     while(opcao != 0) {
         printf("\n\tDigite a Opcao desejada:\n");
@@ -30,79 +33,108 @@ int main()
         printf("\tInserir cliente:\n");
             struct cliente novo = coleta_dados_cliente();
             x = insereOrdenado(li, novo);
-            if (x) {
-                printf("Cliente inserido com sucesso!\nPrecione qualquer tecla para continuar");
-                system("pause");
-                system("cls");
+            if (x > 0) {
+                printf("\nCliente cadastrado com sucesso!");
+                printf("\nPressione ENTER para voltar ao menu...");
+                limpar_buffer();
+                getchar();
+                system("clear");
             }
-            else{
-            system("cls");
-            printf("Erro ao inserir cliente (lista pode estar cheia).\n");
+            else if(x == -1){
+                printf("Código duplicado. Insira outro código.\n");
+            }else {
+                system("clear");
+                printf("Erro ao inserir cliente (lista pode estar cheia).\n");
+                printf("\nPressione ENTER para voltar ao menu...");
+                limpar_buffer();
+                getchar();
+                system("clear");
             }
             break;
         case 2:
-            printf("\tGerar lista geral de cliente:\n");
-            x = tamanhoLista(li);
-            int i = 0;
-            while (i < x) {
-                x = consultaPosicao(li, &cliente_consulta);
-                if (x) {
-                    printf("\nCliente %i", &i);
-                    printf("\nCodigo:    %d", cliente_consulta.codigo);
-                    printf("\n\nCliente: %c", cliente_consulta.Nome);
-                    printf("\nEmpresa:   %.2f", cliente_consulta.Empresa);
-                    printf("\nDepartamento:   %.2f", cliente_consulta.Departamento);
-                    printf("\nCelular:   %.2f\n", cliente_consulta.Celular);
-                    printf("\nTelefone:   %.2f\n", cliente_consulta.Telefone);
-                    printf("\nEmail:   %.2f\n", cliente_consulta.Email);
-                } else {
-                    printf("\nN�o foi possivel gerar lista geral");
-                }
-                i++;
-            }
-            system("cls");
+                printf("\tGerar lista geral de clientes:\n");
+                mostraTodosClientes(li);
+                printf("\nPressione ENTER para voltar ao menu...");
+                limpar_buffer();
+                getchar();
+                system("clear");
             break;
-   /*     case 3:
+       case 3:
             printf("\tBuscar cliente por codigo:\n");
-            printf("Digite a matricula do aluno:\n");
-            scanf("%i", &matricula);
-            x = removeOrdenado(li, matricula);
+            printf("Digite o codigo do cliente:\n");
+            scanf("%i", &codigo);
+            x = consultaCodigo(li, codigo, &cliente_consulta);
+            printf("%i", x);
             if (x) {
-                printf("\nAluno %d removido ordenadamente com sucesso!", x);
+                printf("\nCliente %d", codigo);
+                printf("\nCódigo:       %d", cliente_consulta.codigo);
+                printf("\nNome:         %s", cliente_consulta.Nome);
+                printf("\nEmpresa:      %s", cliente_consulta.Empresa);
+                printf("\nDepartamento: %s", cliente_consulta.Departamento);
+                printf("\nCelular:      %s", cliente_consulta.Celular);
+                printf("\nTelefone:     %s", cliente_consulta.Telefone);
+                printf("\nEmail:        %s\n", cliente_consulta.Email);
+                printf("\nPressione ENTER para voltar ao menu...");
+                limpar_buffer();
+                getchar();
+                system("clear");
             } else {
-                printf("\nNao foi possivel remover o aluno");
+                printf("\nCodigo Invalido");
+                printf("\nPressione ENTER para voltar ao menu...");
+                limpar_buffer();
+                getchar();
+                system("clear");
             }
-        case 4:
-            printf("\tBuscar cliente por nome:\n");
-            printf("Digite a matricula do aluno:\n");
-            scanf("%i", &matricula);
-            x = removeOrdenado(li, matricula);
-            if (x) {
-                printf("\nAluno %d removido ordenadamente com sucesso!", x);
-            } else {
-                printf("\nNao foi possivel remover o aluno");
-            }
+            break;
+            case 4: {
+                char nomeBusca[100];
+                printf("Digite o nome ou parte do nome do cliente: ");
+                limpar_buffer();
+                fgets(nomeBusca, sizeof(nomeBusca), stdin);
+                nomeBusca[strcspn(nomeBusca, "\n")] = '\0';
+                buscaClientePorNome(li, nomeBusca);
+                printf("\nPressione ENTER para voltar ao menu...");
+                getchar();
+                system("clear");
+                break;
+            }            
         case 5:
             printf("\tEditar dados cliente por codigo:\n");
-            printf("Digite a matricula do aluno:\n");
-            scanf("%i", &matricula);
-            x = removeOrdenado(li, matricula);
+            printf("Digite o código do cliente: ");
+            scanf("%d", &codigo);
+            x = editarClientePorCodigo(li, codigo);
             if (x) {
-                printf("\nAluno %d removido ordenadamente com sucesso!", x);
+                printf("\nCliente editado com sucesso!");
             } else {
-                printf("\nNao foi possivel remover o aluno");
+                printf("\nCliente não encontrado ou edição cancelada.");
             }
+            printf("\nPressione ENTER para voltar ao menu...");
+            limpar_buffer();
+            getchar();
+            system("clear");
+            break;
         case 6:
             printf("\tRemover cliente por codigo:\n");
-            printf("Digite a matricula do aluno:\n");
-            scanf("%i", &matricula);
-            x = removeOrdenado(li, matricula);
-            if (x) {
-                printf("\nAluno %d removido ordenadamente com sucesso!", x);
+            printf("Digite o código do cliente: ");
+            scanf("%d", &codigo);
+            x = removeOrdenado(li, codigo);
+            if (x >= 0) {
+                printf("\nCliente removido com sucesso!");
+            } else if (x == -1) {
+                printf("\nRemoção cancelada pelo usuário.");
             } else {
-                printf("\nNao foi possivel remover o aluno");
-            }*/
+                printf("\nCliente não encontrado.");
+            }
+            printf("\nPressione ENTER para voltar ao menu...");
+            limpar_buffer();
+            getchar();
+            system("clear");
+            break;
         case 0:
+            printf("\nSalvando dados...");
+            salvarClientesNoArquivo(li); 
+            printf("Dados salvos com sucesso. Encerrando.\n");
+            apagaLista(li); 
             break;
         default:
             printf("opcao invalida, digite novamente:\n");

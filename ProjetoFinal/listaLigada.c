@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 #include "listaLigada.h"
 
 struct elemento {
@@ -18,16 +20,58 @@ Lista *criaLista(){
 }
 
 void abortaPrograma() {
-    printf("ERRO! Lista nao foi alocada");
+    printf("ERRO! Lista nao foi alocada\n");
     printf("programa sera encerrado... \n\n\n");
     system("pause");
     exit(1);
+}
+
+void paraMinuscula(char *str) {
+    for (int i = 0; str[i]; i++) {
+        str[i] = tolower((unsigned char) str[i]);
+    }
 }
 
 void limpar_buffer() {
     int c;
     while ((c = getchar()) != '\n' && c != EOF);
 }
+
+void salvarClientesNoArquivo(Lista *li) {
+    FILE *fp = fopen("clientes.dat", "wb");
+    if (!fp) {
+        printf("Erro ao abrir arquivo para escrita.\n");
+        return;
+    }
+
+    ELEM *no = *li;
+    while (no != NULL) {
+        fwrite(&no->dados, sizeof(CLIENTE), 1, fp);
+        no = no->prox;
+    }
+    fclose(fp);
+}
+
+void carregarClientesDoArquivo(Lista *li) {
+    FILE *fp = fopen("clientes.dat", "rb");
+    if (!fp) return;
+
+    CLIENTE cliente;
+    while (fread(&cliente, sizeof(CLIENTE), 1, fp)) {
+        insereOrdenado(li, cliente);
+    }
+
+    fclose(fp);
+
+    int x = tamanhoLista(li);
+
+    if (x > 0) {
+        printf("%i cliente(s) encontado(s)\n\n", x);
+    } else {
+        printf("Nenhum Cliente encontrado\n\n");
+    }
+}
+
 
 int tamanhoLista(Lista *li) {
     if(li == NULL) {
@@ -63,6 +107,16 @@ int insereOrdenado(Lista *li, CLIENTE cli) {
     if (li == NULL) {
         abortaPrograma();
     }
+
+    ELEM *temp = *li;
+    while(temp != NULL) {
+        if(temp->dados.codigo == cli.codigo) {
+            return -1;
+        }
+        temp = temp->prox;
+    }
+
+    
     ELEM *no = (ELEM*) malloc(sizeof(ELEM));
     if (no == NULL) {
         return 0;
@@ -102,6 +156,25 @@ int removeOrdenado(Lista *li, int cod) {
     if (no == NULL) {
         return 0;
     }
+
+    printf("\nCliente encontrado:\n");
+    printf("Código:       %d\n", no->dados.codigo);
+    printf("Nome:         %s\n", no->dados.Nome);
+    printf("Empresa:      %s\n", no->dados.Empresa);
+    printf("Departamento: %s\n", no->dados.Departamento);
+    printf("Celular:      %s\n", no->dados.Celular);
+    printf("Telefone:     %s\n", no->dados.Telefone);
+    printf("Email:        %s\n", no->dados.Email);
+
+    char confirmacao;
+    printf("\nDeseja realmente remover este cliente? (s/n): ");
+    limpar_buffer();
+    scanf("%c", &confirmacao);
+    if (confirmacao != 's' && confirmacao != 'S') {
+        printf("\nRemoção cancelada.\n");
+        return -1;
+    }
+    
     if (no == *li){
         *li = no -> prox;
     } else {
@@ -112,19 +185,30 @@ int removeOrdenado(Lista *li, int cod) {
     return codigo;
 }
 
-int consultaPosicao(Lista *li, CLIENTE *cli) {
-    if (li == NULL){
-        abortaPrograma();
+void mostraTodosClientes(Lista *li) {
+    if (li == NULL || *li == NULL) {
+        printf("\nLista vazia ou não inicializada.\n");
+        return;
     }
 
     ELEM *no = *li;
     int i = 1;
+
     while (no != NULL) {
-        no = no -> prox;
-        *cli = no -> dados;
+        printf("\nCliente %d", i);
+        printf("\nCódigo:       %d", no->dados.codigo);
+        printf("\nNome:         %s", no->dados.Nome);
+        printf("\nEmpresa:      %s", no->dados.Empresa);
+        printf("\nDepartamento: %s", no->dados.Departamento);
+        printf("\nCelular:      %s", no->dados.Celular);
+        printf("\nTelefone:     %s", no->dados.Telefone);
+        printf("\nEmail:        %s\n", no->dados.Email);
+        printf("----------------------------------------\n");
+        no = no->prox;
         i++;
     }
-    return 1;
+
+    printf("\nTotal de clientes cadastrados: %d\n", i - 1);
 }
 
 int consultaCodigo(Lista *li, int cod, CLIENTE *cli) {
@@ -142,6 +226,44 @@ int consultaCodigo(Lista *li, int cod, CLIENTE *cli) {
         return 1;
     }
 }
+
+void buscaClientePorNome(Lista *li, const char *nomeBusca) {
+    if (li == NULL) {
+        abortaPrograma();
+    }
+
+    char nomeBuscaMinuscula[100];
+    strncpy(nomeBuscaMinuscula, nomeBusca, sizeof(nomeBuscaMinuscula));
+    nomeBuscaMinuscula[sizeof(nomeBuscaMinuscula) - 1] = '\0';
+    paraMinuscula(nomeBuscaMinuscula);
+
+    ELEM *no = *li;
+    int achou = 0;
+
+    while (no != NULL) {
+        char nomeClienteMinusculo[100];
+        strncpy(nomeClienteMinusculo, no->dados.Nome, sizeof(nomeClienteMinusculo));
+        nomeClienteMinusculo[sizeof(nomeClienteMinusculo) - 1] = '\0';
+        paraMinuscula(nomeClienteMinusculo);
+
+        if (strstr(nomeClienteMinusculo, nomeBuscaMinuscula) != NULL) {
+            printf("\nCodigo: %d\n", no->dados.codigo);
+            printf("Nome: %s\n", no->dados.Nome);
+            printf("Empresa: %s\n", no->dados.Empresa);
+            printf("Departamento: %s\n", no->dados.Departamento);
+            printf("Telefone: %s\n", no->dados.Telefone);
+            printf("Celular: %s\n", no->dados.Celular);
+            printf("Email: %s\n\n", no->dados.Email);
+            achou = 1;
+        }
+        no = no->prox;
+    }
+
+    if (!achou) {
+        printf("Nenhum cliente encontrado com o nome contendo \"%s\".\n", nomeBusca);
+    }
+}
+
 
 struct cliente coleta_dados_cliente() {
     struct cliente c;
@@ -175,6 +297,67 @@ struct cliente coleta_dados_cliente() {
     c.Telefone[strcspn(c.Telefone, "\n")] = '\0';
 
     return c;
+}
+
+int editarClientePorCodigo(Lista *li, int codigo) {
+    if (li == NULL || *li == NULL)
+        return 0;
+
+    ELEM *no = *li;
+    while (no != NULL) {
+        if (no->dados.codigo == codigo) {
+            printf("\nCliente encontrado:\n");
+            printf("Código:       %d\n", no->dados.codigo);
+            printf("Nome:         %s\n", no->dados.Nome);
+            printf("Empresa:      %s\n", no->dados.Empresa);
+            printf("Departamento: %s\n", no->dados.Departamento);
+            printf("Celular:      %s\n", no->dados.Celular);
+            printf("Telefone:     %s\n", no->dados.Telefone);
+            printf("Email:        %s\n", no->dados.Email);
+
+            char confirmacao;
+            printf("\nDeseja editar os dados deste cliente? (s/n): ");
+            limpar_buffer();
+            scanf("%c", &confirmacao);
+            if (confirmacao != 's' && confirmacao != 'S') {
+                printf("\nEdição cancelada. Retornando ao menu...");
+                return 0;
+            }
+
+            printf("\n--- Editando cliente (deixe em branco para manter) ---\n");
+            CLIENTE novo = no->dados;
+
+            limpar_buffer();
+            printf("Novo nome (%s): ", novo.Nome);
+            fgets(novo.Nome, sizeof(novo.Nome), stdin);
+            if (novo.Nome[0] != '\n') novo.Nome[strcspn(novo.Nome, "\n")] = '\0';
+
+            printf("Nova empresa (%s): ", novo.Empresa);
+            fgets(novo.Empresa, sizeof(novo.Empresa), stdin);
+            if (novo.Empresa[0] != '\n') novo.Empresa[strcspn(novo.Empresa, "\n")] = '\0';
+
+            printf("Novo departamento (%s): ", novo.Departamento);
+            fgets(novo.Departamento, sizeof(novo.Departamento), stdin);
+            if (novo.Departamento[0] != '\n') novo.Departamento[strcspn(novo.Departamento, "\n")] = '\0';
+
+            printf("Novo telefone (%s): ", novo.Telefone);
+            fgets(novo.Telefone, sizeof(novo.Telefone), stdin);
+            if (novo.Telefone[0] != '\n') novo.Telefone[strcspn(novo.Telefone, "\n")] = '\0';
+
+            printf("Novo celular (%s): ", novo.Celular);
+            fgets(novo.Celular, sizeof(novo.Celular), stdin);
+            if (novo.Celular[0] != '\n') novo.Celular[strcspn(novo.Celular, "\n")] = '\0';
+
+            printf("Novo email (%s): ", novo.Email);
+            fgets(novo.Email, sizeof(novo.Email), stdin);
+            if (novo.Email[0] != '\n') novo.Email[strcspn(novo.Email, "\n")] = '\0';
+
+            no->dados = novo;
+            return 1;
+        }
+        no = no->prox;
+    }
+    return 0;
 }
 
 void apagaLista(Lista *li) {
