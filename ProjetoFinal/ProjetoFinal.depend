@@ -1,0 +1,13 @@
+# depslib dependency file v1.0
+1750184643 source:c:\users\aluno\desktop\teste\projetofinal\main.c
+	<stdio.h>
+	<stdlib.h>
+	"listaLigada.h"
+
+1750184957 source:c:\users\aluno\desktop\teste\projetofinal\listaligada.c
+	<stdio.h>
+	<stdlib.h>
+	"listaLigada.h"
+
+1750183442 c:\users\aluno\desktop\teste\projetofinal\listaligada.h
+
